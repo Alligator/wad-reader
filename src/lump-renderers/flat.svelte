@@ -1,6 +1,6 @@
 <script lang="ts">
   import type { Wad, WadDirEntry } from "../lib/wad-reader";
-  import { readPalettes } from "./read-palettes";
+  import { readPalettes } from "../lib/read-palettes";
   import Panel from "../components/panel.svelte";
 
   export let lump: Uint8Array;

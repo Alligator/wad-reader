@@ -1,6 +1,6 @@
 <script lang="ts">
   import Panel from "../components/panel.svelte";
-  import { readPalettes } from "./read-palettes";
+  import { readPalettes } from "../lib/read-palettes";
 
   export let lump: Uint8Array;
 
