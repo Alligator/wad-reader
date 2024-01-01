@@ -7,6 +7,7 @@
   import Hex from "./lump-renderers/hex.svelte";
   import Flat from "./lump-renderers/flat.svelte";
   import Colormap from "./lump-renderers/colormap.svelte";
+    import Map from './lump-renderers/map.svelte';
 
   let wad: Wad | null = null;
 
@@ -56,15 +57,20 @@
       if (selectedLump.markers.includes('F')) {
         lumpRenderer = Flat;
       }
+
+      if (/E\dM\d/.test(selectedLump.name) || /MAP\d\d/.test(selectedLump.name)) {
+        lumpRenderer = Map;
+      }
     }
   }
 
   function getIcon(dirEntry: WadDirEntry) {
-    if (dirEntry.name.startsWith('DS')) {
+    const { name } = dirEntry;
+    if (name.startsWith('DS')) {
       return '🔊';
     }
 
-    if (dirEntry.name.startsWith('DP')) {
+    if (name.startsWith('DP')) {
       return '🔉';
     }
 
@@ -72,7 +78,11 @@
       return '🧱';
     }
 
-    switch (dirEntry.name) {
+    if (/E\dM\d/.test(name) || /MAP\d\d/.test(name)) {
+      return '🗺️';
+    }
+
+    switch (name) {
       case 'PLAYPAL':
         return '🎨';
       case 'ENDOOM':
@@ -124,6 +134,7 @@
             <option value="🔉">🔉sounds (pc speaker)</option>
             <option value="🖵">🖵 endoom</option>
             <option value="🧱">🧱 flat</option>
+            <option value="🗺️">🗺️ map</option>
           </select>
           <input type="text" bind:value={textFilter} placeholder="search" />
         </div>
@@ -131,7 +142,7 @@
           {#each filteredLumps as lump}
             <button
               class="lump"
-              class:selected={lump.filepos === selectedLump?.filepos}
+              class:selected={lump.filepos === selectedLump?.filepos && lump.name === selectedLump?.name}
               on:click={() => selectLump(lump)}
             >
               <div>{getIcon(lump)}</div>
