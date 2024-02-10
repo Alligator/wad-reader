@@ -7,18 +7,35 @@
   import Hex from "./lump-renderers/hex.svelte";
   import Flat from "./lump-renderers/flat.svelte";
   import Colormap from "./lump-renderers/colormap.svelte";
-    import Map from './lump-renderers/map.svelte';
+  import MapSvg from './lump-renderers/map-svg.svelte';
+  import Picture from "./lump-renderers/picture.svelte";
+  import WallTextures from "./lump-renderers/wall-textures.svelte";
+
+  const icons = {
+    palette: '🎨',
+    colormap: '🌈',
+    digitalSound: '🔊',
+    pcSpeakerSound: '🔉',
+    endoom: '🖵',
+    map: '🗺️',
+    flat: '🧱',
+    sprite: '🧍',
+    patch: '🚧',
+    wallTexture: '?',
+  };
 
   let wad: Wad | null = null;
 
   let selectedLump: WadDirEntry = null;
   let lumpRenderer: ComponentType<SvelteComponent> = null;
   let lumpData: Uint8Array = null;
+  let fileName: string;
 
   function readWad(
     event: Event & { currentTarget: EventTarget & HTMLInputElement }
   ) {
     const file = event.currentTarget.files[0];
+    fileName = file.name;
     const reader = new FileReader();
     reader.onload = (ev) => {
       const data = ev.target.result as ArrayBuffer;
@@ -52,14 +69,14 @@
 
       if (selectedLump.name.startsWith("DS") || selectedLump.name.startsWith('DP')) {
         lumpRenderer = DigitalSound;
-      }
-      
-      if (selectedLump.markers.includes('F')) {
+      } else if (selectedLump.markers.includes('F')) {
         lumpRenderer = Flat;
-      }
-
-      if (/E\dM\d/.test(selectedLump.name) || /MAP\d\d/.test(selectedLump.name)) {
-        lumpRenderer = Map;
+      } else if (selectedLump.markers.includes('S') || selectedLump.markers.includes('P')) {
+        lumpRenderer = Picture;
+      } else if (/E\dM\d/.test(selectedLump.name) || /MAP\d\d/.test(selectedLump.name)) {
+        lumpRenderer = MapSvg;
+      } else if (/TEXTURE\d+/.test(selectedLump.name)) {
+        lumpRenderer = WallTextures;
       }
     }
   }
@@ -67,28 +84,40 @@
   function getIcon(dirEntry: WadDirEntry) {
     const { name } = dirEntry;
     if (name.startsWith('DS')) {
-      return '🔊';
+      return icons.digitalSound;
     }
 
     if (name.startsWith('DP')) {
-      return '🔉';
+      return icons.pcSpeakerSound;
+    }
+
+    if (/TEXTURE\d+/.test(name)) {
+      return icons.wallTexture;
     }
 
     if (dirEntry.markers.includes('F')) {
-      return '🧱';
+      return icons.flat;
     }
 
-    if (/E\dM\d/.test(name) || /MAP\d\d/.test(name)) {
-      return '🗺️';
+    if (dirEntry.markers.includes('S')) {
+      return icons.sprite;
+    }
+
+    if (dirEntry.markers.includes('P')) {
+      return icons.patch;
+    }
+
+    if (/^E\dM\d/.test(name) || /^MAP\d\d/.test(name)) {
+      return icons.map;
     }
 
     switch (name) {
       case 'PLAYPAL':
-        return '🎨';
+        return icons.palette;
       case 'ENDOOM':
-        return '🖵';
+        return icons.endoom;
       case 'COLORMAP':
-        return '🌈';
+        return icons.colormap;
     }
 
     return '';
@@ -124,17 +153,25 @@
   {:else}
     <div class="layout">
       <div class="sidenav">
-        <h2>lumps</h2>
+        <header>
+          alligator's wad reader
+          <div class="subtitle">
+            viewing {fileName} <button on:click={() => wad = null}>close</button>
+          </div>
+        </header>
         <div class="filter-controls">
           <select bind:value={typeFilter}>
             <option value="">(all)</option>
-            <option value="🎨">🎨 playpal</option>
-            <option value="🌈">🌈 colormap</option>
-            <option value="🔊">🔊 sounds (digital)</option>
-            <option value="🔉">🔉sounds (pc speaker)</option>
-            <option value="🖵">🖵 endoom</option>
-            <option value="🧱">🧱 flat</option>
-            <option value="🗺️">🗺️ map</option>
+            <option value="{icons.palette}">{icons.palette} playpal</option>
+            <option value="{icons.colormap}">{icons.colormap} colormap</option>
+            <option value="{icons.digitalSound}">{icons.digitalSound} sounds (digital)</option>
+            <option value="{icons.pcSpeakerSound}">{icons.pcSpeakerSound}sounds (pc speaker)</option>
+            <option value="{icons.endoom}">{icons.endoom} endoom</option>
+            <option value="{icons.map}">{icons.map}️ map</option>
+            <option value="{icons.flat}">{icons.flat} flat</option>
+            <option value="{icons.sprite}">{icons.sprite} sprite</option>
+            <option value="{icons.patch}">{icons.patch} patch</option>
+            <option value="{icons.wallTexture}">{icons.wallTexture} wall texture</option>
           </select>
           <input type="text" bind:value={textFilter} placeholder="search" />
         </div>
@@ -153,10 +190,11 @@
         </div>
       </div>
       <div class="lump-viewer">
-        <h2>lump viewer</h2>
         <div class="lump-content">
           {#if lumpRenderer}
-            <svelte:component this={lumpRenderer} lump={lumpData} {wad} dirEntry={selectedLump} />
+            {#key selectedLump.filepos}
+              <svelte:component this={lumpRenderer} lump={lumpData} {wad} dirEntry={selectedLump} />
+            {/key}
           {/if}
         </div>
       </div>
@@ -176,7 +214,6 @@
   }
 
   .file-upload > input{
-    border: 1px solid #aaa;
     padding: .5rem;
   }
 
@@ -190,6 +227,13 @@
     /* overflow-y: hidden */
   }
 
+  header {
+    padding: 1rem 0;
+  }
+  header > .subtitle {
+    font-size: 8pt;
+  }
+
   .sidenav {
     display: flex;
     flex-direction: column;
@@ -199,7 +243,7 @@
     display: flex;
     flex-direction: column;
     gap: .5rem;
-    padding: .5rem 0;
+    padding-bottom: .5rem;
   }
 
   .lumps {
@@ -220,22 +264,32 @@
 
     display: grid;
     grid-template-columns: 2rem 2fr 1fr;
-    border-bottom: 1px solid #555;
     align-items: baseline;
     width: 100%;
     cursor: pointer;
+    border-radius: 4px;
+    margin: .25rem 0;
+  }
+
+  .lump:nth-child(even) {
+    background-color: var(--red-70);
   }
 
   .lump.selected {
-    background-color: rgba(255, 255, 255, 0.1);
+    background-color: var(--red-60);
   }
 
   .lump-viewer {
     overflow-y: auto;
     width: 100%;
+    height: 100%;
+    padding: 1rem;
+    box-sizing: border-box;
   }
 
   .lump-content {
     display: flex;
+    align-items: flex-start;
+    height: 100%;
   }
 </style>

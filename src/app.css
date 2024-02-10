@@ -1,18 +1,40 @@
 :root {
+  --red-5:  #f8eff1;
+  --red-10: #f3e1e4;
+  --red-20: #ecbec6;
+  --red-30: #e09aa6;
+  --red-40: #e16b80;
+  --red-50: #cd425b;
+  --red-60: #9e394b;
+  --red-70: #68363f;
+  --red-80: #40282c;
+  --red-90: #1e1517;
+
   font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
   font-size: 12pt;
   line-height: 1.5;
   font-weight: 400;
 
   color-scheme: light dark;
-  color: rgba(255, 255, 255, 0.87);
-  background-color: #242424;
+  color: var(--red-10);
+  background-color: var(--red-80);
 
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   -webkit-text-size-adjust: 100%;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+input, select, button {
+  background-color: var(--red-70);
+  border: 2px solid var(--red-50);
+  color: var(--red-10);
+  border-radius: 4px;
 }
 
 /* util classes */

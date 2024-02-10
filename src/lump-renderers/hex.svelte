@@ -2,17 +2,16 @@
   export let lump: Uint8Array;
   const rowSize = 16;
 
-  let rowIndices: number[];
   let rows: Uint8Array[];
   $: {
-    rowIndices = new Array(Math.ceil(lump.length / rowSize)).fill(0).map((_, idx) => idx * rowSize);
-    rows = rowIndices.map((index) => {
+    rows = [];
+    for (let i = 0; i < lump.length; i += rowSize) {
       const row = new Uint8Array(rowSize);
-      for (let i = 0; i < rowSize; i++) {
-        row[i] = lump[index + i] ?? 0;
+      for (let j = 0; j < rowSize; j++) {
+        row[j] = lump[i + j] ?? 0;
       }
-      return row;
-    });
+      rows.push(row);
+    }
   }
 
   function pad(n) {
@@ -61,6 +60,6 @@
   }
 
   table td.dim {
-    color: #777;
+    color: var(--red-30);
   }
 </style>
