@@ -39,7 +39,7 @@
             <td class={byte === 0 ? 'dim' : ''}>{pad(byte.toString(16))}</td>
           {/each}
           <td>
-            {Array.from(lump.slice(index, index + rowSize)).map(c => {
+            {Array.from(lump.slice(index * rowSize, (index + 1) * rowSize)).map(c => {
               const char = String.fromCharCode(c);
               return isPrintable(char) ? char : '.';
             }).join('')}
